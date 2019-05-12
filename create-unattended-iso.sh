@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+currentuser="$( whoami)"
+
 # Default Folders
 isooutputpath="$(pwd)/builds"  # destination folder to store the final iso file
 configfilespath="$(pwd)/cfg"
@@ -36,10 +38,10 @@ echo
 echo " +---------------------------------------------------+"
 echo " |            UNATTENDED UBUNTU ISO MAKER            |"
 echo " +---------------------------------------------------+"
-echo
 
 # ask if script runs without sudo or root priveleges
 if [ $currentuser != "root" ]; then
+    echo
     echo " you need sudo privileges to run this script, or run it as root"
     exit 1
 fi
@@ -47,10 +49,68 @@ fi
 # check for mkisofs availability
 
 # List and ask which ISO File should be used
-https://askubuntu.com/questions/682095/create-bash-menu-based-on-file-list-map-files-to-numbers
+# Source : https://askubuntu.com/questions/682095/create-bash-menu-based-on-file-list-map-files-to-numbers
+
+echo
+echo "Select ISO File"
+
+unset isofiles i
+while IFS= read -r -d $'\0' f; do
+  isofiles[i++]="$f"
+done < <(find $isoinpath -maxdepth 1 -type f -name "*.iso" -print0 )
+
+select opt in "${isofiles[@]}" "Stop the script"; do
+  case $opt in
+    *.iso)
+      echo "ISO file $opt selected"
+      selectediso=$opt
+      break
+      ;;
+    "Stop the script")
+      echo "You chose to stop"
+      exit 0
+      ;;
+    *)
+      echo "This is not a number"
+      ;;
+  esac
+done
+
 
 # List and ask which Kickstart file should be used
-https://askubuntu.com/questions/682095/create-bash-menu-based-on-file-list-map-files-to-numbers
+
+echo
+echo "Select configuration folder"
+
+unset configfilefolders i
+while IFS= read -r -d $'\0' f; do
+  configfilefolders[i++]="$f"
+done < <(find $configfilespath -maxdepth 1 -mindepth 1 -type d -print0 )
+
+select opt in "${configfilefolders[@]}" "Stop the script"; do
+  case $opt in
+    *.iso)
+      selectedconfig=$opt
+      break
+      ;;
+    "Stop the script")
+      echo "You chose to stop"
+      exit 0
+      ;;
+    *)
+      echo "This is not a number"
+      ;;
+  esac
+done
+
+echo
+echo "ISO file is : $selectediso"
+echo "Config Folder is : $selectedconfig"
+echo "ISO will be created in : $isooutputpath"
+echo
+
+# Temporary statement to prevent issues
+exit 0
 
 # Mount ISO file
 mkdir $isomnt
